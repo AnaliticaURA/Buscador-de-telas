@@ -292,12 +292,12 @@ tr.detail td{padding:0; background:#FBF6F2}
     <div class="insight">
       <div class="panel">
         <h3>Distribución de casos</h3>
-        <div class="ph-sub">Cómo se reparten los items entre URA y el paquete de Mattelsa</div>
+        <div class="ph-sub">Cómo se reparten los items entre el requerimiento y el paquete de Mattelsa</div>
         <div id="dist"></div>
       </div>
       <div class="panel">
         <h3>Telas más solicitadas y faltantes</h3>
-        <div class="ph-sub">Telas del paquete que faltan en requerimientos URA existentes</div>
+        <div class="ph-sub">Telas del paquete que faltan en los requerimientos existentes</div>
         <ul class="freq" id="freq"></ul>
       </div>
     </div>
@@ -324,7 +324,7 @@ tr.detail td{padding:0; background:#FBF6F2}
             <th data-sort="item">ITEM URA <span class="sortc">↕</span></th>
             <th data-sort="ref">Ref. Cliente <span class="sortc">↕</span></th>
             <th>Producto</th>
-            <th class="num" data-sort="ura">Telas URA <span class="sortc">↕</span></th>
+            <th class="num" data-sort="ura">Telas requerimiento <span class="sortc">↕</span></th>
             <th class="num" data-sort="paq">Telas Paquete <span class="sortc">↕</span></th>
             <th data-sort="status">Estado <span class="sortc">↕</span></th>
             <th class="num" data-sort="diff">Δ Difs <span class="sortc">↕</span></th>
@@ -636,9 +636,9 @@ function buildModel(D, fileName){
 const STATUS={
   coincide:{label:'Coincide',cls:'b-ok',color:'var(--sage)',dl:'Coincide perfecto'},
   difiere:{label:'Difiere',cls:'b-diff',color:'var(--amber)',dl:'Difiere (faltan / sobran / extensión)'},
-  sin_req:{label:'Sin req. URA',cls:'b-sin',color:'var(--clay)',dl:'Sin requerimiento en URA'},
+  sin_req:{label:'Sin req. requerimiento',cls:'b-sin',color:'var(--clay)',dl:'Sin requerimiento'},
   incompleto:{label:'Dato incompleto',cls:'b-inc',color:'var(--taupe)',dl:'Dato incompleto del paquete'},
-  solo_ura:{label:'Solo en URA',cls:'b-ura',color:'var(--slate)',dl:'Existe en URA, no en el paquete'}
+  solo_ura:{label:'Solo en requerimiento',cls:'b-ura',color:'var(--slate)',dl:'Existe en requerimiento, no en el paquete'}
 };
 const UI={view:'analisis', q:'', sort:{key:'status',dir:1}, page:1, pageSize:50, expanded:new Set(), expandedB:new Set(), statusFilter:new Set(), filters:{col:'',cat:'',genero:'',proy:'',tejido:''}, onlyEstado:false, qr:'', qb:''};
 
@@ -650,7 +650,7 @@ function renderKPIs(){
     {lab:'Items analizados', val:STATE.universe.length, sub:'URA ∪ Paquete', cls:''},
     {lab:'Coinciden', val:c.coincide, sub:'tela + extensión', cls:'c-ok', ic:'check'},
     {lab:'Con diferencias', val:c.difiere, sub:STATE.totalDiff+' diferencias en total', cls:'c-diff', ic:'warn'},
-    {lab:'Sin req. en URA', val:c.sin_req, sub:STATE.export.items+' montables', cls:'c-sin', ic:'plus'},
+    {lab:'Sin requerimiento', val:c.sin_req, sub:STATE.export.items+' montables', cls:'c-sin', ic:'plus'},
     {lab:'Dato incompleto', val:c.incompleto, sub:'paquete sin tela/extensión', cls:'c-inc'},
     {lab:'% Coincidencia', val:STATE.pct+'%', sub:'sobre '+STATE.comparables+' comparables', cls:'c-pct'}
   ];
@@ -672,7 +672,7 @@ function renderFreq(){
   const f=STATE.freqArr;
   $('#freq').innerHTML = f.length? f.map((x,i)=>`<li><span class="rk">${i+1}</span>
     <span class="ft" title="${x.desc}">${x.tela} · ${x.desc||'—'}</span><span class="fc tnum">${x.c}×</span></li>`).join('')
-    : '<div class="empty">No hay telas faltantes en los requerimientos URA existentes. ✓</div>';
+    : '<div class="empty">No hay telas faltantes en los requerimientos existentes. ✓</div>';
 }
 function renderSelects(){
   const F=STATE.filters;
@@ -747,17 +747,17 @@ function detailHTML(u){
   if(u.status==='sin_req'){
     const montable = !u.allRefEmpty;
     return `<div class="detail-note"><svg viewBox="0 0 24 24" fill="none" stroke="var(--clay)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
-      <span>Este item está en el paquete de Mattelsa pero <b>no tiene requerimiento en URA</b>. ${montable?`Tiene <b>${u.paqCount-u.emptyRows}</b> tela(s) con información → se incluye en la exportación de <b>Montar req</b>.`:`No trae referencia de tela en el paquete → va al reporte <b>"Sin tela en paquete"</b>.`}</span></div>`+cmpTable(u);
+      <span>Este item está en el paquete de Mattelsa pero <b>no tiene requerimiento</b>. ${montable?`Tiene <b>${u.paqCount-u.emptyRows}</b> tela(s) con información → se incluye en la exportación de <b>Montar req</b>.`:`No trae referencia de tela en el paquete → va al reporte <b>"Sin tela en paquete"</b>.`}</span></div>`+cmpTable(u);
   }
-  if(u.status==='solo_ura') return `<div class="detail-note"><svg viewBox="0 0 24 24" fill="none" stroke="var(--slate)" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span>Existe en URA pero <b>no aparece en el paquete</b> de Mattelsa. Posible requerimiento obsoleto a revisar.</span></div>`+cmpTable(u);
-  if(u.status==='incompleto') return `<div class="detail-note"><svg viewBox="0 0 24 24" fill="none" stroke="var(--taupe2)" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span>El paquete trae alguna tela <b>sin referencia o sin extensión</b>, por lo que no es posible validar completamente. <b>No es un error de URA</b>: requiere que el cliente complete el dato.</span></div>`+cmpTable(u);
+  if(u.status==='solo_ura') return `<div class="detail-note"><svg viewBox="0 0 24 24" fill="none" stroke="var(--slate)" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span>Existe en el requerimiento pero <b>no aparece en el paquete</b> de Mattelsa. Posible requerimiento obsoleto a revisar.</span></div>`+cmpTable(u);
+  if(u.status==='incompleto') return `<div class="detail-note"><svg viewBox="0 0 24 24" fill="none" stroke="var(--taupe2)" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span>El paquete trae alguna tela <b>sin referencia o sin extensión</b>, por lo que no es posible validar completamente. <b>No es un error del requerimiento</b>: requiere que el cliente complete el dato.</span></div>`+cmpTable(u);
   return cmpTable(u);
 }
 function cmpTable(u){
   if(!u.detail.length) return '';
-  const cs={ok:{c:'cs-ok',t:'Coincide'},ext:{c:'cs-ext',t:'Extensión distinta'},falta:{c:'cs-falta',t:'Falta en URA'},sobra:{c:'cs-sobra',t:'Sobra en URA'},inc:{c:'cs-inc',t:'Sin dato en paquete'}};
+  const cs={ok:{c:'cs-ok',t:'Coincide'},ext:{c:'cs-ext',t:'Extensión distinta'},falta:{c:'cs-falta',t:'Falta en requerimiento'},sobra:{c:'cs-sobra',t:'Sobra en requerimiento'},inc:{c:'cs-inc',t:'Sin dato en paquete'}};
   return `<div class="cmp-grid">
-    <div class="cmp-head"><div>Tela (ITEM TELA · descripción)</div><div>Ext. URA</div><div>Ext. Paquete</div><div>Estado</div></div>
+    <div class="cmp-head"><div>Tela (ITEM TELA · descripción)</div><div>Ext. requerimiento</div><div>Ext. Paquete</div><div>Estado</div></div>
     ${u.detail.map(d=>{ const m=cs[d.cs];
       return `<div class="cmp-line">
         <div class="telaname">${d.tela} <small>· ${d.name||'—'}</small></div>
@@ -834,7 +834,7 @@ function buscadorDetailHTML(u){
   const fabric=u.telas.filter(t=>t.reftela!=='');
   if(!fabric.length) return `<div class="detail-note"><svg viewBox="0 0 24 24" fill="none" stroke="var(--clay)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><span>Este item no trae <b>referencia de tela</b> en el paquete de Mattelsa.</span></div>`;
   return `<div class="cmp-grid">
-    <div class="cmp-head"><div>Ref. Tela Cliente</div><div>ITEM TELA (URA)</div><div>Extensión</div><div>Color</div></div>
+    <div class="cmp-head"><div>Ref. Tela Cliente</div><div>ITEM TELA (requerimiento)</div><div>Extensión</div><div>Color</div></div>
     ${fabric.map(t=>`<div class="cmp-line">
       <div class="telaname">${t.reftela}</div>
       <div>${t.tela?`<span class="telaname">${t.tela}</span>`:'<span style="color:var(--taupe2);font-size:12px">sin mapeo</span>'}</div>
